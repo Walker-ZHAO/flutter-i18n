@@ -22,8 +22,8 @@ class CustomLocalizations {
   }
 
   static final Map<String, StringBase> _stringValues = {
-    'en': StringEn(),
     'zh': StringZh(),
+    'en': StringEn(),
   };
 
   StringBase get strings =>
