@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:i18n/custom/custom_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 ///
 /// 多语言自定义实现
@@ -119,7 +120,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
             ),
             ElevatedButton(
               onPressed: () {
-                ref.read(preferenceLocaleProvider.notifier).switchLanguage();
+                ref.read(localeProvider.notifier).switchLanguage();
               },
               child: Text(
                 CustomLocalizations.of(context).strings.switchLanguage,
@@ -137,37 +138,46 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
   }
 }
 
-enum PreferenceLocale {
-  zh,
-  en,
-}
-
-class PreferenceLocaleNotifier extends StateNotifier<PreferenceLocale> {
-  PreferenceLocaleNotifier() : super(PreferenceLocale.zh);
+// 状态保存
+class LocaleNotifier extends StateNotifier<Locale> {
+  LocaleNotifier(Locale locale) : super(locale);
 
   void switchLanguage() {
-    switch (state) {
-      case PreferenceLocale.zh:
-        state = PreferenceLocale.en;
-        break;
-      case PreferenceLocale.en:
-        state = PreferenceLocale.zh;
-        break;
+    if (state.languageCode == 'zh') {
+      state = const Locale('en');
+    } else {
+      state = const Locale('zh');
     }
+    setPreferenceLocale(state);
   }
 }
 
-final preferenceLocaleProvider =
-    StateNotifierProvider<PreferenceLocaleNotifier, PreferenceLocale>((ref) {
-  return PreferenceLocaleNotifier();
+final localeProvider = StateNotifierProvider<LocaleNotifier, Locale>((ref) {
+  final locale = ref.watch(preferenceLocaleProvider).when(
+        data: (locale) => locale,
+        error: (_, __) => const Locale('zh'),
+        loading: () => const Locale('zh'),
+      );
+  return LocaleNotifier(locale);
 });
 
-final localeProvider = Provider<Locale>((ref) {
-  final preference = ref.watch(preferenceLocaleProvider);
-  switch (preference) {
-    case PreferenceLocale.zh:
-      return const Locale('zh');
-    case PreferenceLocale.en:
-      return const Locale('en');
-  }
+final preferenceLocaleProvider = FutureProvider<Locale>((ref) async {
+  return await getPreferenceLocale();
 });
+
+// 数据持久化
+const kLocaleKey = 'locale';
+
+Future<Locale> getPreferenceLocale() async {
+  final prefs = await SharedPreferences.getInstance();
+  final value = prefs.getString(kLocaleKey);
+  if (value == 'en') {
+    return const Locale('en');
+  }
+  return const Locale('zh');
+}
+
+Future setPreferenceLocale(Locale locale) async {
+  final prefs = await SharedPreferences.getInstance();
+  prefs.setString(kLocaleKey, locale.languageCode);
+}
