@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:i18n/custom/custom_localizations.dart';
 
 ///
@@ -10,15 +11,15 @@ import 'package:i18n/custom/custom_localizations.dart';
 /// Email: zhaocework@gmail.com
 /// Date: 2022/4/14
 void main() {
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({Key? key}) : super(key: key);
 
   // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       onGenerateTitle: (context) =>
           CustomLocalizations.of(context).strings.tips,
@@ -37,12 +38,13 @@ class MyApp extends StatelessWidget {
       ),
       localizationsDelegates: CustomLocalizations.localizationsDelegates,
       supportedLocales: CustomLocalizations.supportedLocales,
+      locale: ref.watch(localeProvider),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
+class MyHomePage extends ConsumerStatefulWidget {
   const MyHomePage({Key? key, required this.title}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
@@ -57,10 +59,10 @@ class MyHomePage extends StatefulWidget {
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  ConsumerState<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends ConsumerState<MyHomePage> {
   int _counter = 0;
 
   void _incrementCounter() {
@@ -115,6 +117,14 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.headline4,
             ),
+            ElevatedButton(
+              onPressed: () {
+                ref.read(preferenceLocaleProvider.notifier).switchLanguage();
+              },
+              child: Text(
+                CustomLocalizations.of(context).strings.switchLanguage,
+              ),
+            ),
           ],
         ),
       ),
@@ -126,3 +136,38 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
+
+enum PreferenceLocale {
+  zh,
+  en,
+}
+
+class PreferenceLocaleNotifier extends StateNotifier<PreferenceLocale> {
+  PreferenceLocaleNotifier() : super(PreferenceLocale.zh);
+
+  void switchLanguage() {
+    switch (state) {
+      case PreferenceLocale.zh:
+        state = PreferenceLocale.en;
+        break;
+      case PreferenceLocale.en:
+        state = PreferenceLocale.zh;
+        break;
+    }
+  }
+}
+
+final preferenceLocaleProvider =
+    StateNotifierProvider<PreferenceLocaleNotifier, PreferenceLocale>((ref) {
+  return PreferenceLocaleNotifier();
+});
+
+final localeProvider = Provider<Locale>((ref) {
+  final preference = ref.watch(preferenceLocaleProvider);
+  switch (preference) {
+    case PreferenceLocale.zh:
+      return const Locale('zh');
+    case PreferenceLocale.en:
+      return const Locale('en');
+  }
+});
