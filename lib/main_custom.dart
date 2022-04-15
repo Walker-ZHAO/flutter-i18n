@@ -118,13 +118,36 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.headline4,
             ),
-            ElevatedButton(
-              onPressed: () {
-                ref.read(localeProvider.notifier).switchLanguage();
-              },
-              child: Text(
-                CustomLocalizations.of(context).strings.switchLanguage,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    ref.read(localeProvider.notifier).switchToZH();
+                  },
+                  child: Text(
+                    CustomLocalizations.of(context).strings.switchToZH,
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    ref.read(localeProvider.notifier).switchToEN();
+                  },
+                  child: Text(
+                    CustomLocalizations.of(context).strings.switchToEN,
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    ref.read(localeProvider.notifier).followSystem();
+                  },
+                  child: Text(
+                    CustomLocalizations.of(context)
+                        .strings
+                        .followSystemLanguage,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -142,13 +165,19 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
 class LocaleNotifier extends StateNotifier<Locale> {
   LocaleNotifier(Locale locale) : super(locale);
 
-  void switchLanguage() {
-    if (state.languageCode == 'zh') {
-      state = const Locale('en');
-    } else {
-      state = const Locale('zh');
-    }
+  void switchToZH() {
+    state = const Locale('zh');
     setPreferenceLocale(state);
+  }
+
+  void switchToEN() {
+    state = const Locale('en');
+    setPreferenceLocale(state);
+  }
+
+  void followSystem() {
+    state = WidgetsBinding.instance!.window.locale;
+    setPreferenceLocale(const Locale('system'));
   }
 }
 
@@ -171,10 +200,14 @@ const kLocaleKey = 'locale';
 Future<Locale> getPreferenceLocale() async {
   final prefs = await SharedPreferences.getInstance();
   final value = prefs.getString(kLocaleKey);
-  if (value == 'en') {
-    return const Locale('en');
+  switch (value) {
+    case 'system':
+      return WidgetsBinding.instance!.window.locale;
+    case 'en':
+      return const Locale('en');
+    default:
+      return const Locale('zh');
   }
-  return const Locale('zh');
 }
 
 Future setPreferenceLocale(Locale locale) async {

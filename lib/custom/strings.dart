@@ -7,7 +7,9 @@
 abstract class StringBase {
   String get helloWorld;
   String get tips;
-  String get switchLanguage;
+  String get switchToZH;
+  String get switchToEN;
+  String get followSystemLanguage;
 }
 
 class StringEn extends StringBase {
@@ -18,7 +20,13 @@ class StringEn extends StringBase {
   String get tips => 'You have pushed the button this many times:';
 
   @override
-  String get switchLanguage => 'Switch Language';
+  String get switchToZH => 'Chinese';
+
+  @override
+  String get switchToEN => 'English';
+
+  @override
+  String get followSystemLanguage => 'Follow System Language';
 }
 
 class StringZh extends StringBase {
@@ -29,5 +37,11 @@ class StringZh extends StringBase {
   String get tips => '你点击按钮的次数:';
 
   @override
-  String get switchLanguage => '切换语言';
+  String get switchToZH => '中文';
+
+  @override
+  String get switchToEN => '英文';
+
+  @override
+  String get followSystemLanguage => '跟随系统语言';
 }
